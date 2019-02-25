@@ -1,0 +1,96 @@
+mode: null
+log_dir: null
+
+data:
+    name: celeba
+    root: ./data/celeba
+    num_workers: 16
+    size: 64
+
+
+model:
+    name: srgan
+
+    noise_type: gaussian
+    noise_dim: [16, 16, 16, 16, 16, 16, 16]
+
+    mle:
+        type: gaussian
+        options:
+            order: 2
+            min_noise: 0.01
+    gan:
+        type: gan
+        with_logits: true
+    losses:
+        base:
+          gan_weight: 1.0
+          recon_weight: 1000
+        pred:
+        mm:
+            mm_1st_weight: 2400.
+            mm_2nd_weight: 0.
+            gan_weight: 1.0
+            mle_weight: 0.0
+
+
+batch_size: 32
+num_mm: 8
+num_mm_samples: 12
+
+d_updates_per_step: 1
+g_updates_per_step: 5
+
+
+# Optimizers
+d_optimizer:
+    type: Adam
+    options:
+        lr: 0.0001
+        betas: [0.5, 0.999]
+        weight_decay: 0.0001
+        amsgrad: True
+    clip_grad:
+        type: value
+        options:
+            clip_value: 0.5
+
+g_optimizer:
+    type: Adam
+    options:
+        lr: 0.0001
+        betas: [0.5, 0.999]
+        weight_decay: 0.0001
+        amsgrad: True
+    clip_grad:
+        type: value
+        options:
+            clip_value: 0.5
+
+p_optimizer:
+    type: Adam
+    options:
+        lr: 0.0001
+        betas: [0.5, 0.999]
+        weight_decay: 0.0001
+        amsgrad: True
+    clip_grad:
+        type: value
+        options:
+            clip_value: 0.5
+
+# Learning rate schedulers
+d_lr_scheduler:
+g_lr_scheduler:
+p_lr_scheduler:
+e_lr_scheduler:
+
+ckpt_step: 5000
+summary_step: 500
+
+log_dispersion_min: -6.
+log_dispersion_max: 0.
+
+summary:
+    train_samples: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+    val_samples: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]

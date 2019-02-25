@@ -1,0 +1,123 @@
+mode: null
+log_dir: null
+
+data:
+    name: maps
+    root: ./data/maps/512x512
+    num_workers: 32
+    height: 512
+    width: 512
+    train_height: 256
+    train_width: 256
+    resize: False
+    random_flip: False
+    random_rotate: False
+    norm:
+        mean: [0.8767, 0.8899, 0.8668]
+        std: [0.0926, 0.0601, 0.1292]
+
+model:
+    name: pix2pix
+
+    # Architecture
+    in_channels: 3
+    out_channels: 3
+    num_downs: 8  # 1/256
+    num_features: 64
+    pred_features: 64
+    noise_type: gaussian
+    noise_dim: [0, 0, 0, 0, 0, 0, 32, 32, 32]
+    predictor: true
+    norm: batch
+
+    # Loss configurations
+    mle:
+        type: laplace
+        options:
+            order: 2
+    gan:
+        type: gan
+        with_logits: true
+    losses:
+        base:
+            recon_weight: 100.
+            gan_weight: 1.
+        pred:
+        mm:
+            mm_1st_weight: 0.0
+            mm_2nd_weight: 0.0
+            gan_weight: 1.0
+            mle_weight: 1.0
+            recon_weight: 0.0  # this converts optimize_g to BASE mode
+
+batch_size: 16
+num_mm: 8
+num_mm_samples: 10
+
+d_updates_per_step: 1
+g_updates_per_step: 1
+
+# Optimizers
+d_optimizer:
+    type: Adam
+    options:
+        lr: 0.0001
+        betas: [0.5, 0.999]
+        weight_decay: 0.0001
+        amsgrad: True
+    clip_grad:
+        type: value
+        options:
+            clip_value: 0.5
+
+g_optimizer:
+    type: Adam
+    options:
+        lr: 0.0001
+        betas: [0.5, 0.999]
+        weight_decay: 0.0001
+        amsgrad: True
+    clip_grad:
+        type: value
+        options:
+            clip_value: 0.5
+
+p_optimizer:
+    type: Adam
+    options:
+        lr: 0.0001
+        betas: [0.5, 0.999]
+        weight_decay: 0.0001
+        amsgrad: True
+    clip_grad:
+        type: value
+        options:
+            clip_value: 0.5
+
+e_optimizer:
+    type: Adam
+    options:
+        lr: 0.0001
+        betas: [0.5, 0.999]
+        weight_decay: 0.0001
+        amsgrad: True
+    clip_grad:
+        type: value
+        options:
+            clip_value: 0.5
+
+# Learning rate schedulers
+d_lr_scheduler:
+g_lr_scheduler:
+p_lr_scheduler:
+e_lr_scheduler:
+
+ckpt_step: 5000
+summary_step: 1000
+
+log_dispersion_min: -6.
+log_dispersion_max: 0.
+
+summary:
+    train_samples: [97, 140, 189, 251, 308, 319, 379, 418, 552, 733, 809, 879, 925, 954, 1028, 1080]
+    val_samples: [99, 150, 452, 469, 511, 535, 581, 608, 614, 661, 722, 925, 931, 951, 998, 1051]

@@ -1,0 +1,113 @@
+mode: null
+log_dir: null
+
+
+data:
+    name: celeba
+    root: ./data/celeba/128x128
+    category: null
+    num_workers: 16
+    size: 128
+    random_crop: 128
+    # random mask
+    local_size: 64
+    mask_size: [[48, 64], [48, 64]]
+    # mask overlap
+    overlap: 0
+    overlap_weight: 0.
+    scale: sigmoid
+    norm: null
+    real_jitter: 0.0
+
+
+model:
+    name: glcic
+
+    # Architecture
+    noise_type: gaussian
+    noise_dim: [0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 32, 32]
+
+    # Loss
+    mle:
+        type: gaussian
+        options:
+            order: 2
+            min_noise: 0.01
+    gan:
+        type: gan
+        with_logits: true
+    losses:
+        base:
+            recon_weight: 100
+            gan_weight: 1.0
+        pred:
+        mm:
+            mm_1st_weight: 1000.
+            mm_2nd_weight: 1000.
+            gan_weight: 1.0
+            mle_weight:  0.0
+
+
+g_pretrain_step: 0
+d_pretrain_step: 0
+
+batch_size: 16
+num_mm: 8
+num_mm_samples: 12
+
+d_updates_per_step: 1
+g_updates_per_step: 3
+
+
+# Optimizers
+d_optimizer:
+    type: Adam
+    options:
+        lr: 0.0001
+        betas: [0.5, 0.999]
+        weight_decay: 0.0001
+        amsgrad: True
+    clip_grad:
+        type: value
+        options:
+            clip_value: 0.5
+
+g_optimizer:
+    type: Adam
+    options:
+        lr: 0.0001
+        betas: [0.5, 0.999]
+        weight_decay: 0.0001
+        amsgrad: True
+    clip_grad:
+        type: value
+        options:
+            clip_value: 0.5
+
+p_optimizer:
+    type: Adam
+    options:
+        lr: 0.0001
+        betas: [0.5, 0.999]
+        weight_decay: 0.0001
+        amsgrad: True
+    clip_grad:
+        type: value
+        options:
+            clip_value: 0.5
+
+# Learning rate schedulers
+d_lr_scheduler:
+g_lr_scheduler:
+p_lr_scheduler:
+e_lr_scheduler:
+
+ckpt_step: 3000
+summary_step: 500
+
+log_dispersion_min: -6.
+log_dispersion_max: 0.
+
+summary:
+    train_samples: [3825, 4957, 6457, 12365, 25817, 25942, 26465, 29138, 42834, 48282, 60148, 73585, 74907, 76942, 88628, 90125, 107117, 108936, 113474, 113614, 125387, 128753, 131210, 134668, 135283, 136666, 136918, 160845, 162794, 167819, 174655, 179805]
+    val_samples: [1170, 1607, 1762, 3188, 3456, 4951, 6090, 6239, 6307, 7259, 7509, 7806, 7895, 8014, 9866, 10190, 12262, 12431, 13018, 14245, 15698, 17337, 17767, 17975, 18056, 18083, 18110, 18882, 19607, 19817, 19848, 19930]

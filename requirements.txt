@@ -1,0 +1,14 @@
+tensorboardX==1.2
+torch==0.4.1
+torchvision==0.2.1
+pyyaml
+tensorflow
+ipdb
+git+https://github.com/lanpa/tensorboardX
+jupyter
+jupyterlab
+matplotlib
+tqdm
+opencv-python
+scipy
+scikit-image
