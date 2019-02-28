@@ -37,7 +37,7 @@ If you are willing to use this code or cite the paper, please refer the followin
 $ pip install -r requirements.txt
 ```
 
-## Preprocessing 
+## Preprocessing
 ### Cityscapes
 We expect the original Cityscapes dataset to be located at `data/cityscapes/original`. Please refer to [Cityscapes Dataset](http://www.cityscapes-dataset.net/) and [mcordts/cityscapesScripts](https://github.com/mcordts/cityscapesScripts) for details.
 ```bash
@@ -82,17 +82,17 @@ $ python ./scripts/preprocess_celeba.py \
 
 ### MR-GAN
 ```bash
-$ python main.py --train --mode mr --config ./configs/{model}-{dataset}-{distribution}-{method}.yaml --log-dir ./logs/mr
+$ python main.py --mode mr --config ./configs/{model}-{dataset}-{distribution}-{method}.yaml --log-dir ./logs/mr
 ```
 
 ### Proxy MR-GAN
 Train a predictor first and determine the checkpoint where the validation loss is minimized.
 ```bash
-$ python main.py --train --mode pred --config configs/{model}-{dataset}-{distribution}-{method}.yaml --log-dir ./logs/predictor
+$ python main.py --mode pred --config configs/{model}-{dataset}-{distribution}-{method}.yaml --log-dir ./logs/predictor
 ```
-Use the checkpoint as `--pred-ckpt` to train the generator.  
+Use the checkpoint as `--pred-ckpt` to train the generator.
 ```bash
-$ python main.py --train --mode mr --config configs/{model}-{dataset}-{distribution}-{method}.yaml --log-dir ./logs/pmr --pred-ckpt ./logs/predictor/ckpt/{step}-p.pt
+$ python main.py --mode mr --config configs/{model}-{dataset}-{distribution}-{method}.yaml --log-dir ./logs/pmr --pred-ckpt ./logs/predictor/ckpt/{step}-p.pt
 ```
 
 

@@ -43,16 +43,16 @@ model:
             recon_weight: 100.
             gan_weight: 1.
         pred:
-        mm:
-            mm_1st_weight: 0.0
-            mm_2nd_weight: 0.0
+        mr:
+            mr_1st_weight: 0.0
+            mr_2nd_weight: 0.0
             gan_weight: 1.0
             mle_weight: 100.0
             recon_weight: 0.0  # this converts optimize_g to BASE mode
 
 batch_size: 16
-num_mm: 8
-num_mm_samples: 10
+num_mr: 8
+num_mr_samples: 10
 
 d_updates_per_step: 1
 g_updates_per_step: 1

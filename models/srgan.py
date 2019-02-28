@@ -263,29 +263,29 @@ class SRGAN(BaseModel):
             if summarize:
                 scalar['loss/g/mse'] = mse_loss.detach()
                 scalar['loss/g/total'] += weighted_mse_loss.detach()
-        # backprop before accumulating mm gradients
+        # backprop before accumulating mr gradients
         if isinstance(loss, torch.Tensor):
             loss.backward()
         # MR loss (MR)
         if self.mode == MODE_MR:
-            mm_summaries = self.accumulate_mm_grad(x, y, summarize)
-            mm_scalar = mm_summaries['scalar']
-            mm_histogram = mm_summaries['histogram']
-            mm_image = mm_summaries['image']
+            mr_summaries = self.accumulate_mr_grad(x, y, summarize)
+            mr_scalar = mr_summaries['scalar']
+            mr_histogram = mr_summaries['histogram']
+            mr_image = mr_summaries['image']
             torch.cuda.empty_cache()
             if summarize:
-                scalar['loss/g/total'] += mm_scalar['loss/g/total']
-                del mm_scalar['loss/g/total']
-                scalar.update(mm_scalar)
-                histogram.update(mm_histogram)
-                for i in range(min(16, self.config.num_mm)):
+                scalar['loss/g/total'] += mr_scalar['loss/g/total']
+                del mr_scalar['loss/g/total']
+                scalar.update(mr_scalar)
+                histogram.update(mr_histogram)
+                for i in range(min(16, self.config.num_mr)):
                     image_id = 'train_samples/%d' % i
                     if image_id in image:
                         image[image_id] = torch.cat([
-                            image[image_id], mm_image[image_id]
+                            image[image_id], mr_image[image_id]
                         ], 2)
                     else:
-                        image[image_id] = mm_image[image_id]
+                        image[image_id] = mr_image[image_id]
                     image[image_id] = (image[image_id] + 1) / 2
         # Optimize the network
         self.clip_grad(self.optim_g, self.config.g_optimizer.clip_grad)

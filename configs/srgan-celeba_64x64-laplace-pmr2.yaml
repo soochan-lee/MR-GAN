@@ -27,16 +27,16 @@ model:
           gan_weight: 1.0
           recon_weight: 1000
         pred:
-        mm:
-            mm_1st_weight: 2400.
-            mm_2nd_weight: 2400.
+        mr:
+            mr_1st_weight: 2400.
+            mr_2nd_weight: 2400.
             gan_weight: 1.0
             mle_weight: 0.0
 
 
 batch_size: 32
-num_mm: 8
-num_mm_samples: 12
+num_mr: 8
+num_mr_samples: 12
 
 d_updates_per_step: 1
 g_updates_per_step: 5

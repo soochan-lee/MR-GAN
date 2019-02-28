@@ -21,7 +21,7 @@ if __name__ == '__main__':
     assert args.mode in MODES, 'Unknown mode %s' % args.mode
     if args.mode == MODE_MR:
         if not (args.pred_ckpt or args.resume_ckpt):
-            print('WARNING: Moment matching mode requires '
+            print('WARNING: Proxy MR-GAN requires '
                   'checkpoint path of a predictor')
 
     # Load config

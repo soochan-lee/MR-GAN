@@ -84,13 +84,13 @@ class Pix2Pix(BaseModel):
         return y
 
     def build_d_input(self, x, samples):
-        num_mm = self.config.num_mm
-        num_samples = self.config.num_mm_samples
+        num_mr = self.config.num_mr
+        num_samples = self.config.num_mr_samples
 
-        x_dup = x[:num_mm].unsqueeze(1)
+        x_dup = x[:num_mr].unsqueeze(1)
         x_dup = x_dup.expand(-1, num_samples, -1, -1, -1)
         x_dup = x_dup.contiguous().view(
-            num_mm * num_samples, *list(x_dup.size()[2:]))
+            num_mr * num_samples, *list(x_dup.size()[2:]))
         return torch.cat([x_dup, samples], 1)
 
     def optimize_g(self, x, y, step, summarize=False):
@@ -128,29 +128,29 @@ class Pix2Pix(BaseModel):
 
         # Moment matching loss
         if self.mode == MODE_MR and (
-                self.loss_config.mm_1st_weight > 0
-                or self.loss_config.mm_2nd_weight > 0
+                self.loss_config.mr_1st_weight > 0
+                or self.loss_config.mr_2nd_weight > 0
                 or self.loss_config.mle_weight > 0
         ):
-            mm_summaries = self.accumulate_mm_grad(x, y, summarize)
-            mm_scalar = mm_summaries['scalar']
-            mm_histogram = mm_summaries['histogram']
-            mm_image = mm_summaries['image']
+            mr_summaries = self.accumulate_mr_grad(x, y, summarize)
+            mr_scalar = mr_summaries['scalar']
+            mr_histogram = mr_summaries['histogram']
+            mr_image = mr_summaries['image']
             torch.cuda.empty_cache()
 
             if summarize:
-                scalar['loss/g/total'] += mm_scalar['loss/g/total']
-                del mm_scalar['loss/g/total']
-                scalar.update(mm_scalar)
-                histogram.update(mm_histogram)
-                for i in range(min(16, self.config.num_mm)):
+                scalar['loss/g/total'] += mr_scalar['loss/g/total']
+                del mr_scalar['loss/g/total']
+                scalar.update(mr_scalar)
+                histogram.update(mr_histogram)
+                for i in range(min(16, self.config.num_mr)):
                     image_id = 'train_samples/%d' % i
                     if image_id in image:
                         image[image_id] = torch.cat([
-                            image[image_id], mm_image[image_id]
+                            image[image_id], mr_image[image_id]
                         ], 2)
                     else:
-                        image[image_id] = mm_image[image_id]
+                        image[image_id] = mr_image[image_id]
                     image[image_id] = image[image_id] * 0.5 + 0.5
 
         # Optimize
@@ -382,7 +382,7 @@ class Pix2PixUnet(nn.Module):
         # Create up conv in reverse order
         prev_ch = self.out_ch
         next_ch = self.num_features
-        self.mm_ch, self.up_ch = [], []
+        self.mr_ch, self.up_ch = [], []
         for i in range(self.num_downs):
             if self.mode == MODE_MR:
                 noise_dim = self.noise_dim[i + 1]

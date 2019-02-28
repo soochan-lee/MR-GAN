@@ -386,30 +386,30 @@ class GLCIC(BaseModel):
             if summarize:
                 scalar['loss/g/mse'] = mse_loss.detach()
                 scalar['loss/g/total'] += weighted_mse_loss.detach()
-        # backprop before accumulating mm gradients
+        # backprop before accumulating mr gradients
         if isinstance(loss, torch.Tensor):
             loss.backward()
 
         # MR loss (MR)
         if self.mode == MODE_MR:
-            mm_summaries = self.accumulate_mm_grad(x, y, summarize)
-            mm_scalar = mm_summaries['scalar']
-            mm_histogram = mm_summaries['histogram']
-            mm_image = mm_summaries['image']
+            mr_summaries = self.accumulate_mr_grad(x, y, summarize)
+            mr_scalar = mr_summaries['scalar']
+            mr_histogram = mr_summaries['histogram']
+            mr_image = mr_summaries['image']
             torch.cuda.empty_cache()
             if summarize:
-                scalar['loss/g/total'] += mm_scalar['loss/g/total']
-                del mm_scalar['loss/g/total']
-                scalar.update(mm_scalar)
-                histogram.update(mm_histogram)
-                for i in range(min(16, self.config.num_mm)):
+                scalar['loss/g/total'] += mr_scalar['loss/g/total']
+                del mr_scalar['loss/g/total']
+                scalar.update(mr_scalar)
+                histogram.update(mr_histogram)
+                for i in range(min(16, self.config.num_mr)):
                     image_id = 'train_samples/%d' % i
                     if image_id in image:
                         image[image_id] = torch.cat([
-                            image[image_id], mm_image[image_id]
+                            image[image_id], mr_image[image_id]
                         ], 2)
                     else:
-                        image[image_id] = mm_image[image_id]
+                        image[image_id] = mr_image[image_id]
                     image[image_id] = image[image_id]
         # Optimize the network
         self.clip_grad(self.optim_g, self.config.g_optimizer.clip_grad)
@@ -558,17 +558,17 @@ class GLCIC(BaseModel):
         return y
 
     def build_d_input(self, x, samples):
-        num_mm = self.config.num_mm
-        num_samples = self.config.num_mm_samples
-        local_box_dup = x.local_boxes[:num_mm].unsqueeze(1)
+        num_mr = self.config.num_mr
+        num_samples = self.config.num_mr_samples
+        local_box_dup = x.local_boxes[:num_mr].unsqueeze(1)
         local_box_dup = local_box_dup.expand(-1, num_samples, -1)
         local_box_dup = local_box_dup.contiguous().view(
-            num_mm * num_samples, local_box_dup.size(2)
+            num_mr * num_samples, local_box_dup.size(2)
         )
 
-        x_dup = x[:num_mm].unsqueeze(1).expand(-1, num_samples, -1, -1, -1)
+        x_dup = x[:num_mr].unsqueeze(1).expand(-1, num_samples, -1, -1, -1)
         x_dup = x_dup.contiguous().view(
-            num_mm * num_samples, *list(x_dup.size()[2:]))
+            num_mr * num_samples, *list(x_dup.size()[2:]))
 
         x_dup.local_boxes = local_box_dup
 

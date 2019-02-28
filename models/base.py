@@ -247,12 +247,12 @@ class BaseModel(nn.Module):
         if len(samples.size()) == 4:
             samples = samples.unsqueeze(0)
         if isinstance(self.mle_loss, GaussianMLELoss):
-            num_samples = samples.size(1)
+            num_mr_samples = samples.size(1)
             sample_1st = samples.mean(dim=1, keepdim=True)
             # Tensor.std has bug up to PyTorch 0.4.1
             sample_2nd = (samples - sample_1st) ** 2
             sample_2nd = sample_2nd.sum(dim=1, keepdim=True)
-            sample_2nd /= num_samples - 1
+            sample_2nd /= num_mr_samples - 1
 
         # Laplace statistics
         elif isinstance(self.mle_loss, LaplaceMLELoss):
@@ -273,21 +273,21 @@ class BaseModel(nn.Module):
         """Build discriminator input"""
         raise NotImplementedError
 
-    def accumulate_mm_grad(self, x, y, summarize=False):
+    def accumulate_mr_grad(self, x, y, summarize=False):
         # Initialize summaries
         scalar = {}
         histogram = {}
         image = {}
 
-        num_mm = self.config.num_mm
-        num_samples = self.config.num_mm_samples
+        num_mr = self.config.num_mr
+        num_mr_samples = self.config.num_mr_samples
 
         loss = 0.
 
         # Get predictive mean and variance
         if self.net_p is not None:
             with torch.no_grad():
-                pred_1st, pred_log_2nd = self.net_p(x[:num_mm])
+                pred_1st, pred_log_2nd = self.net_p(x[:num_mr])
                 pred_2nd = torch.exp(pred_log_2nd)
 
             if summarize:
@@ -297,7 +297,7 @@ class BaseModel(nn.Module):
             pred_1st, pred_log_2nd, pred_2nd = None, None, None
 
         # Get samples
-        samples, _ = self.net_g(x[:num_mm], num_samples=num_samples)
+        samples, _ = self.net_g(x[:num_mr], num_samples=num_mr_samples)
 
         # GAN loss
         if self.loss_config.gan_weight > 0:
@@ -311,7 +311,7 @@ class BaseModel(nn.Module):
 
         # Get sample mean and variance
         samples = samples.view(
-            num_mm, num_samples, *list(samples.size()[1:]))
+            num_mr, num_mr_samples, *list(samples.size()[1:]))
         sample_1st, sample_2nd = self.sample_statistics(samples)
 
         if summarize:
@@ -325,22 +325,22 @@ class BaseModel(nn.Module):
         # Direct MLE without predictor
         if self.loss_config.mle_weight > 0:
             if self.name == 'glcic':
-                masks = x[:num_mm, -1:, ...]
+                masks = x[:num_mr, -1:, ...]
                 sample_2nd = (
                     sample_2nd * masks +
                     math.exp(self.config.log_dispersion_min) * (1. - masks)
                 )
-                normalizer = x[:num_mm, -1:, ...].sum()
+                normalizer = x[:num_mr, -1:, ...].sum()
             else:
                 normalizer = None
             if isinstance(self.mle_loss, GaussianMLELoss):
                 mle_loss = self.mle_loss(
-                    sample_1st, sample_2nd, self.mle_target(y[:num_mm]),
+                    sample_1st, sample_2nd, self.mle_target(y[:num_mr]),
                     log_dispersion=False, normalizer=normalizer)
             elif isinstance(self.mle_loss, LaplaceMLELoss):
                 sample_mean = samples.mean(1)
                 with torch.no_grad():
-                    deviation = self.mle_target(y[:num_mm]) - sample_1st
+                    deviation = self.mle_target(y[:num_mr]) - sample_1st
                     mean_target = (deviation + sample_mean).detach()
                 mle_loss = self.mle_loss(
                     sample_mean, sample_2nd, mean_target,
@@ -355,35 +355,35 @@ class BaseModel(nn.Module):
                 scalar['loss/g/mle'] = mle_loss.detach()
 
         # Moment matching
-        if self.loss_config.mm_1st_weight or self.loss_config.mm_2nd_weight:
+        if self.loss_config.mr_1st_weight or self.loss_config.mr_2nd_weight:
             normalizer = (
-                x[:num_mm, -1:, ...].sum() if self.name == 'glcic' else None
+                x[:num_mr, -1:, ...].sum() if self.name == 'glcic' else None
             )
             if isinstance(self.mle_loss, GaussianMLELoss):
-                mm_1st_loss = self._mse_loss(
+                mr_1st_loss = self._mse_loss(
                     sample_1st, pred_1st, normalizer=normalizer
                 )
             elif isinstance(self.mle_loss, LaplaceMLELoss):
                 sample_mean = samples.mean(1)
                 with torch.no_grad():
                     mean_target = (pred_1st - sample_1st + sample_mean).detach()
-                mm_1st_loss = self._mse_loss(
+                mr_1st_loss = self._mse_loss(
                     sample_mean, mean_target, normalizer=normalizer
                 )
             else:
                 raise RuntimeError('Invalid MLE loss')
-            mm_2nd_loss = self._mse_loss(
+            mr_2nd_loss = self._mse_loss(
                 sample_2nd, pred_2nd, normalizer=normalizer
             )
-            weighted_mm_loss = \
-                self.loss_config.mm_1st_weight * mm_1st_loss + \
-                self.loss_config.mm_2nd_weight * mm_2nd_loss
-            loss += weighted_mm_loss
+            weighted_mr_loss = \
+                self.loss_config.mr_1st_weight * mr_1st_loss + \
+                self.loss_config.mr_2nd_weight * mr_2nd_loss
+            loss += weighted_mr_loss
 
             if summarize:
-                scalar['loss/g/mm_1st'] = mm_1st_loss.detach()
-                scalar['loss/g/mm_2nd'] = mm_2nd_loss.detach()
-                scalar['loss/g/mm'] = weighted_mm_loss.detach()
+                scalar['loss/g/mr_1st'] = mr_1st_loss.detach()
+                scalar['loss/g/mr_2nd'] = mr_2nd_loss.detach()
+                scalar['loss/g/mr'] = weighted_mr_loss.detach()
 
         if summarize:
             scalar['loss/g/total'] = loss.detach()
