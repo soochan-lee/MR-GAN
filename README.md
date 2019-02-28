@@ -4,7 +4,14 @@
 
 Official PyTorch implementation of ICLR 2019 paper: *Harmonizing Maximum Likelihood with GANs for Multimodal Conditional Generation.*
 
-Conditional GAN models are often optimized by the joint use of the GAN loss and reconstruction loss. We show that this training recipe shared by almost all existing methods is problametic and has one critical side effect: lack of diversity in output samples. In order to accomplish both training stability and mul- timodal output generation, we propose novel training schemes with a new set of losses that simply replace the reconstruction loss, and thus are applicable to any conditional generation task.
+Conditional GAN models are often optimized by the joint use of the GAN loss and reconstruction loss. We show that this training recipe shared by almost all existing methods is problematic and has one critical side effect: lack of diversity in output samples.
+In order to accomplish both training stability and multimodal output generation, we propose novel training schemes with a new set of losses named *moment reconstruction losses* that simply replace the reconstruction loss.
+
+![mismatch](./arts/mismatch.jpg)
+
+![model](./arts/model.jpg)
+
+![multiple tasks](./arts/multiple_tasks.jpg)
 
 
 ## Reference
@@ -12,7 +19,7 @@ Conditional GAN models are often optimized by the joint use of the GAN loss and 
 If you are willing to use this code or cite the paper, please refer the following:
 ```bibtex
 @inproceedings{
-    lee2018harmonizing,
+    lee2019harmonizing,
     title={Harmonizing Maximum Likelihood with {GAN}s for Multimodal Conditional Generation},
     author={Soochan Lee and Junsoo Ha and Gunhee Kim},
     booktitle={International Conference on Learning Representations},
@@ -56,13 +63,13 @@ $ python ./scripts/preprocess_pix2pix_data.py \
 ### CelebA
 We expect the original CelebA dataset to be located at `data/celeba/original` with the directory structure of `data/celeba/original/train` and `data/celeba/original/val`.
 ```bash
-$ # For Super-Resolution
+# For Super-Resolution
 $ python ./scripts/preprocess_celeba.py \
     --src data/celeba/original \
     --dst data/celeba/64x64 \
     --size 64
 
-$ # For Inpainting
+# For Inpainting
 $ python ./scripts/preprocess_celeba.py \
     --src data/celeba/original \
     --dst data/celeba/128x128 \
@@ -75,12 +82,16 @@ $ python ./scripts/preprocess_celeba.py \
 
 ### MR-GAN
 ```bash
-$ ./main --train --mode mr --config ./configs/{model}-{dataset}-{distribution}-{method}.yaml --log-dir ./logs/mr
+$ python main.py --train --mode mr --config ./configs/{model}-{dataset}-{distribution}-{method}.yaml --log-dir ./logs/mr
 ```
 
 ### Proxy MR-GAN
+Train a predictor first and determine the checkpoint where the validation loss is minimized.
 ```bash
 $ python main.py --train --mode pred --config configs/{model}-{dataset}-{distribution}-{method}.yaml --log-dir ./logs/predictor
+```
+Use the checkpoint as `--pred-ckpt` to train the generator.  
+```bash
 $ python main.py --train --mode mr --config configs/{model}-{dataset}-{distribution}-{method}.yaml --log-dir ./logs/pmr --pred-ckpt ./logs/predictor/ckpt/{step}-p.pt
 ```
 
