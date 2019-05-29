@@ -24,10 +24,10 @@ def main():
         src_dir = os.path.join(args.src, mode)
         dst_dir = os.path.join(args.dst, mode)
 
-        items = [
-            os.path.join(src_dir, name)
-            for name in os.listdir(src_dir)
-        ]
+        items = []
+        for path, dir, files in os.walk(src_dir):
+            for file in files:
+                items.append(os.path.join(path, file))
 
         index = 0
         print('Processing %s...' % mode)

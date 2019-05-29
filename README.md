@@ -45,8 +45,7 @@ $ python ./scripts/preprocess_pix2pix_data.py \
     --src data/cityscapes/original/leftImg8bit \
     --dst data/cityscapes/256x256 \
     --size 256 \
-    --random-flip \
-    --random-rotate
+    --random-flip
 ```
 
 ### Maps
