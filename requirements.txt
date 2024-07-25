@@ -1,5 +1,5 @@
 tensorboardX==1.2
-torch==0.4.1
+torch==2.2.0
 torchvision==0.2.1
 pyyaml
 tensorflow
